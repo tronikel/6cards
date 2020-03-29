@@ -69,12 +69,17 @@ function addrooms(id) {
     console.log('sub connection');
     console.log(s.nsp.name);
     console.log(s.id);
+    const message2send = new msg(id, "server", null, tpartyList.get(id).users);
+    subroom.emit('update-players', message2send);
+    console.log(tpartyList.get(id).users)
+    console.log("updated players sent");
+   
     s.on('new-player', (message) => {
 
       const newPlayer = new user(message.content.username, message.content.pokemon, message.content.isMainUser)
       const gameId = message.id;
       tpartyList.get(gameId).users.push(newPlayer);
-      const message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users)
+      const message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
       console.log(message.from);
       console.log(tpartyList.get(gameId).users);
       subroom.emit('update-players', message2send);
@@ -96,6 +101,15 @@ function addrooms(id) {
       subroom.emit('update-party', message2send);
       console.log("update-party sent");
     });
+    
+    s.on('new-message', (message) => {
+      const gameId = message.id;
+      const message2send = new msg(gameId, "server", message.status, message)
+      console.log(message.from);
+      subroom.emit('new-message', message2send);
+      console.log("new-message sent");
+    });
+
     s.on('disconnect', function () {
       console.log('Got disconnect!');
     });
