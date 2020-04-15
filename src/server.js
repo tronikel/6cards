@@ -23,7 +23,7 @@ rooms = new HashMap();
 let tokens = ["TEST"];
 let tpokemons = new pokemons();
 let tmessage = new msg();
-let tuser = new user("toto", tpokemons.pokemonsList[0].name, false);
+let tuser = new user(0,"toto", tpokemons.pokemonsList[0].name, false);
 let tparty = new party(tokens[0], tpokemons, [tuser], tuser);
 let tpartyList = new HashMap();
 tpartyList.set(tokens[0], tparty);
@@ -76,14 +76,77 @@ function addrooms(id) {
    
     s.on('new-player', (message) => {
 
-      const newPlayer = new user(message.content.username, message.content.pokemon, message.content.isMainUser)
+      const newPlayer = new user(message.content.id,message.content.username, message.content.pokemon, message.content.isMainUser)
       const gameId = message.id;
-      tpartyList.get(gameId).users.push(newPlayer);
-      const message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
-      console.log(message.from);
+      let message2send;
+      let test = false; /* le user id du joueur est déjà connu ?  */
+      let oldUser;
+    
+      for (let index = 0; index < tpartyList.get(gameId).users.length; index++) {
+        if (tpartyList.get(gameId).users[index].id=== message.content.id) {
+          test = true
+      
+        } 
+      }
+
+      if (test) {
+        let test2 = true; /* ce username n'a pas encore été utilisé par un autre joueur ?*/
+       for (let index = 0; index < tpartyList.get(gameId).users.length; index++) {
+          if ((tpartyList.get(gameId).users[index].id != newPlayer.id) &&(tpartyList.get(gameId).users[index].usermane=== newPlayer.username)){
+            test2 = false
+            console.log("user name deja pris : " + u.usermane)
+          } 
+        }
+        if(test2) {
+
+          for (let index = 0; index < tpartyList.get(gameId).users.length; index++) {
+            if (tpartyList.get(gameId).users[index].id=== message.content.id) {
+            tpartyList.get(gameId).users[index]= new user(message.content.id,message.content.username, message.content.pokemon, message.content.isMainUser);;
+            
+          }
+          }
+              
+          if(newPlayer.pokemon ==="inconnu") {
+            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username);
+            subroom.emit('update-players', message2send);
+            console.log("updated players sent");
+          }else {
+            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
+            subroom.emit('update-players', message2send);
+            console.log("updated players sent");
+          }
+        } else {
+          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username);
+          subroom.emit('update-players', message2send);
+          console.log("updated players sent");
+        }
+      } else {
+        let test3 = true; /* ce username n'a pas encore été utilisé par un autre joueur*/
+
+        for (let index = 0; index < tpartyList.get(gameId).users.length; index++) {
+          if (tpartyList.get(gameId).users[index].username=== message.content.username) {
+            test3 = false
+           
+          } 
+        }
+        if(test3) {
+          tpartyList.get(gameId).users.push(newPlayer);
+          if(newPlayer.pokemon ==="inconnu") {
+            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username);
+            subroom.emit('update-players', message2send);
+            console.log("updated players sent");
+          }else {
+            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
+            subroom.emit('update-players', message2send);
+            console.log("updated players sent");
+          }
+        } else {
+          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username);
+          subroom.emit('update-players', message2send);
+          console.log("updated players sent");
+        }
+      }
       console.log(tpartyList.get(gameId).users);
-      subroom.emit('update-players', message2send);
-      console.log("updated players sent");
     });
     s.on('start-party', (message) => {
 
@@ -123,18 +186,47 @@ app.post('/checktoken', function (req, res) {
   tokens.includes(mes) ? res.status(200).send({ "message": "OK token -" + mes }) : res.status(200).send({ "message": "Error token - " + mes });
   //addrooms(mes);
 });
+app.post('/checkusername', function (req, res) {
+  console.log(req.body)
+  const mes = req.body['message'];
+  const test = false;
+  mes = mes.split("-");
+  tpartyList.get(mes[0]).users.forEach(user => {
+    if(user.username=mes[1]){
+      test = true
+    }
+    
+  });
+  
+ test ? res.status(200).send({ "message": "OK username -" + mes }) : res.status(200).send({ "message": "Error username -" + mes  });
+  //addrooms(mes);
+});
+app.post('/checkuserid', function (req, res) {
+  console.log(req.body)
+  const mes = req.body['message'];
+  const test = false;
+  mes = mes.split("-");
+  tpartyList.get(mes[0]).users.forEach(user => {
+    if(user.id=mes[1]){
+      test = true
+    }
+    
+  });
+  
+ test ? res.status(200).send({ "message": "OK username -" + mes }) : res.status(200).send({ "message": "Error username -" + mes  });
+  //addrooms(mes);
+});
 app.post('/newtoken', function (req, res) {
   let token = generatetoken();
   tokens.push(token);
   let tparty = new party(token, new pokemons(), [], null);
   tpartyList.set(token, tparty);
   addrooms(token);
-
   console.log(tokens)
   res.status(200).send({ "message": "New token -" + token });
 });
-app.post('/viewtokens', function (req, res) {
 
+app.post('/viewtokens', function (req, res) {
   console.log(tokens)
   res.status(200).send({ "message": "all tokens -" + tokens });
 });

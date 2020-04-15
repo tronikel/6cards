@@ -1,5 +1,6 @@
 module.exports = class User {
-    constructor(username,pokemon,isMainUser){
+    constructor(id, username,pokemon,isMainUser){
+        this.id = id
         this.username=username;
         this.pokemon=pokemon;
         this.isMainUser=isMainUser
