@@ -69,7 +69,7 @@ function addrooms(id) {
     console.log('sub connection');
     console.log(s.nsp.name);
     console.log(s.id);
-    const message2send = new msg(id, "server", null, tpartyList.get(id).users);
+    const message2send = new msg(id, "server", null, tpartyList.get(id).users, "all");
     subroom.emit('update-players', message2send);
     console.log(tpartyList.get(id).users)
     console.log("updated players sent");
@@ -107,16 +107,16 @@ function addrooms(id) {
           }
               
           if(newPlayer.pokemon ==="inconnu") {
-            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username);
+            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username, message.from);
             subroom.emit('update-players', message2send);
             console.log("updated players sent");
           }else {
-            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
+            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users, message.from);
             subroom.emit('update-players', message2send);
             console.log("updated players sent");
           }
         } else {
-          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username);
+          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username, message.from);
           subroom.emit('update-players', message2send);
           console.log("updated players sent");
         }
@@ -132,16 +132,16 @@ function addrooms(id) {
         if(test3) {
           tpartyList.get(gameId).users.push(newPlayer);
           if(newPlayer.pokemon ==="inconnu") {
-            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username);
+            message2send = new msg(gameId, "server", message.status, "OK -"+newPlayer.username, message.from);
             subroom.emit('update-players', message2send);
             console.log("updated players sent");
           }else {
-            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users);
+            message2send = new msg(gameId, "server", message.status, tpartyList.get(gameId).users, message.from);
             subroom.emit('update-players', message2send);
             console.log("updated players sent");
           }
         } else {
-          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username);
+          message2send = new msg(gameId, "server", message.status, "KO -"+newPlayer.username, message.from);
           subroom.emit('update-players', message2send);
           console.log("updated players sent");
         }
@@ -150,7 +150,7 @@ function addrooms(id) {
     });
     s.on('start-party', (message) => {
 
-      const message2send = new msg(gameId, "server", message.status, message)
+      const message2send = new msg(gameId, "server", message.status, message, "all")
       console.log(message.from);
 
       subroom.emit('start-party', message2send);
@@ -158,7 +158,7 @@ function addrooms(id) {
     });
     s.on('update-party', (message) => {
 
-      const message2send = new msg(gameId, "server", message.status, message)
+      const message2send = new msg(gameId, "server", message.status, message, "all")
       console.log(message.from);
 
       subroom.emit('update-party', message2send);
@@ -167,7 +167,7 @@ function addrooms(id) {
     
     s.on('new-message', (message) => {
       const gameId = message.id;
-      const message2send = new msg(gameId, "server", message.status, message)
+      const message2send = new msg(gameId, "server", message.status, message, "all")
       console.log(message.from);
       subroom.emit('new-message', message2send);
       console.log("new-message sent");
